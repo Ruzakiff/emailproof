@@ -3,7 +3,7 @@
 client_id = "c5dee011283e7e9eef079ed6e015c1f2"
 name = "emailproof"
 handle = "emailproof"
-application_url = "https://robert-mcdonald-ibm-answered.trycloudflare.com"
+application_url = "https://informed-privilege-manufactured-warren.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://robert-mcdonald-ibm-answered.trycloudflare.com/auth/callback",
-  "https://robert-mcdonald-ibm-answered.trycloudflare.com/auth/shopify/callback",
-  "https://robert-mcdonald-ibm-answered.trycloudflare.com/api/auth/callback"
+  "https://informed-privilege-manufactured-warren.trycloudflare.com/auth/callback",
+  "https://informed-privilege-manufactured-warren.trycloudflare.com/auth/shopify/callback",
+  "https://informed-privilege-manufactured-warren.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
