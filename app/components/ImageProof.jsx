@@ -50,14 +50,28 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
 
   const overlayedImages = isUploaded && (
     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-      <img src="/materials/rawred.jpg" alt="Red T-shirt" style={{ width: '100%' }} />
+      <img src="materials/rawred.jpg" alt="Red T-shirt" style={{ width: '100%', pointerEvents: 'none' }} />
       {files.map((file, index) => (
-        <Draggable key={index} bounds="parent">
-          <div style={{ position: 'absolute', top: 0, left: 0, cursor: 'move' }}>
+        <Draggable 
+          key={index} 
+          bounds="parent"
+          onStart={(e) => e.stopPropagation()}
+          onDrag={(e) => e.stopPropagation()}
+          onStop={(e) => e.stopPropagation()}
+        >
+          <div 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              cursor: 'move',
+              touchAction: 'none'
+            }}
+          >
             <img
               src={URL.createObjectURL(file)}
               alt={file.name}
-              style={{ maxWidth: '100px', maxHeight: '100px' }}
+              style={{ maxWidth: '100px', maxHeight: '100px', pointerEvents: 'none' }}
             />
           </div>
         </Draggable>
