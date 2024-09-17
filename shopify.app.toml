@@ -3,7 +3,7 @@
 client_id = "c5dee011283e7e9eef079ed6e015c1f2"
 name = "emailproof"
 handle = "emailproof"
-application_url = "https://utah-sleeps-celebs-agricultural.trycloudflare.com"
+application_url = "https://creates-searched-identification-ent.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://utah-sleeps-celebs-agricultural.trycloudflare.com/auth/callback",
-  "https://utah-sleeps-celebs-agricultural.trycloudflare.com/auth/shopify/callback",
-  "https://utah-sleeps-celebs-agricultural.trycloudflare.com/api/auth/callback"
+  "https://creates-searched-identification-ent.trycloudflare.com/auth/callback",
+  "https://creates-searched-identification-ent.trycloudflare.com/auth/shopify/callback",
+  "https://creates-searched-identification-ent.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

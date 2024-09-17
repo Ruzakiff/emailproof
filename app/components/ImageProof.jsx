@@ -48,11 +48,12 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
     </LegacyStack>
   );
 
-  const draggedImages = isUploaded && (
-    <div style={{ position: 'relative', width: '100%', height: '400px', border: '1px solid #ccc' }}>
+  const overlayedImages = isUploaded && (
+    <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+      <img src="/materials/rawred.jpg" alt="Red T-shirt" style={{ width: '100%' }} />
       {files.map((file, index) => (
         <Draggable key={index} bounds="parent">
-          <div style={{ position: 'absolute', cursor: 'move' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, cursor: 'move' }}>
             <img
               src={URL.createObjectURL(file)}
               alt={file.name}
@@ -82,7 +83,7 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
       ) : (
         <>
           <Text variant="bodyMd">Images uploaded successfully! Drag them around:</Text>
-          {draggedImages}
+          {overlayedImages}
         </>
       )}
     </Page>
