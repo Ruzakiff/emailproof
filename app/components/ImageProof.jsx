@@ -3,9 +3,25 @@ import { TitleBar } from "@shopify/app-bridge-react";
 import { NoteIcon } from '@shopify/polaris-icons';
 import Draggable from 'react-draggable';
 
-export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Button }) {
+export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Button, Select } ) {
   const [files, setFiles] = useState([]);
-  const [isUploaded, setIsUploaded] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [processedImages, setProcessedImages] = useState([]);
+  const [mediaType, setMediaType] = useState('tshirt');
+
+  const mediaOptions = [
+    {label: 'T-Shirt', value: 'tshirt'},
+    {label: 'Mug', value: 'mug'},
+    {label: 'Poster', value: 'poster'},
+    // Add more media types as needed
+  ];
+
+  const backgroundImages = {
+    tshirt: 'materials/rawred_u2netp_alpha.png',
+    mug: 'materials/redtshirt.jpg',
+    poster: '/poster-template.jpg',
+    // Add more background images for each media type
+  };
 
   const handleDropZoneDrop = useCallback(
     (_dropFiles, acceptedFiles, _rejectedFiles) =>
@@ -13,9 +29,29 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
     [],
   );
 
-  const handleUpload = () => {
-    // TODO: Implement actual file upload logic here
-    setIsUploaded(true);
+  const handleMediaTypeChange = useCallback((value) => setMediaType(value), []);
+
+  const handleUpload = async () => {
+    setIsUploading(true);
+    try {
+      // Simulating API call - replace with actual API call
+      const uploadedImages = await Promise.all(files.map(async (file) => {
+        // Simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          url: URL.createObjectURL(file),
+          name: file.name
+        };
+      }));
+
+      setProcessedImages(uploadedImages);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      // Handle error (e.g., show error message to user)
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const validImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
@@ -48,12 +84,12 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
     </LegacyStack>
   );
 
-  const overlayedImages = isUploaded && (
+  const overlayedImages = processedImages.length > 0 && (
     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-      <img src="materials/rawred_u2netp_alpha.png" alt="Red T-shirt" style={{ width: '100%', pointerEvents: 'none' }} />
-      {files.map((file, index) => (
+      <img src={backgroundImages[mediaType]} alt={`${mediaType} template`} style={{ width: '100%', pointerEvents: 'none' }} />
+      {processedImages.map((image) => (
         <Draggable 
-          key={index} 
+          key={image.id} 
           bounds="parent"
           onStart={(e) => e.stopPropagation()}
           onDrag={(e) => e.stopPropagation()}
@@ -69,8 +105,8 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
             }}
           >
             <img
-              src={URL.createObjectURL(file)}
-              alt={file.name}
+              src={image.url}
+              alt={image.name}
               style={{ maxWidth: '100px', maxHeight: '100px', pointerEvents: 'none' }}
             />
           </div>
@@ -82,21 +118,27 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
   return (
     <Page>
       <TitleBar title="Image Proof" />
-      {!isUploaded ? (
+      <Select
+        label="Select Media Type"
+        options={mediaOptions}
+        onChange={handleMediaTypeChange}
+        value={mediaType}
+      />
+      {processedImages.length === 0 ? (
         <>
           <DropZone onDrop={handleDropZoneDrop} variableHeight>
             {uploadedFiles}
             {fileUpload}
           </DropZone>
           {files.length > 0 && (
-            <Button onClick={handleUpload} primary>
-              Upload Images
+            <Button onClick={handleUpload} primary loading={isUploading}>
+              {isUploading ? 'Uploading...' : 'Upload Images'}
             </Button>
           )}
         </>
       ) : (
         <>
-          <Text variant="bodyMd">Images uploaded successfully! Drag them around:</Text>
+          <Text variant="bodyMd">Images processed successfully! Drag them around:</Text>
           {overlayedImages}
         </>
       )}
