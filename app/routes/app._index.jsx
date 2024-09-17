@@ -1,6 +1,6 @@
 import { authenticate } from "../shopify.server";
 import { ImageProof } from "../components/imageproof";
-import { Page, DropZone, LegacyStack, Thumbnail, Text } from '@shopify/polaris';
+import { Page, DropZone, LegacyStack, Thumbnail, Text, Button } from '@shopify/polaris';
 
 export const loader = async ({ request }) => {
 	await authenticate.admin(request);
@@ -15,6 +15,7 @@ export default function Index() {
 			LegacyStack={LegacyStack}
 			Thumbnail={Thumbnail}
 			Text={Text}
+			Button={Button}
 		/>
 	);
 }

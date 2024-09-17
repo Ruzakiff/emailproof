@@ -1,15 +1,22 @@
 import React, { useState, useCallback } from 'react';
 import { TitleBar } from "@shopify/app-bridge-react";
 import { NoteIcon } from '@shopify/polaris-icons';
+import Draggable from 'react-draggable';
 
-export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text }) {
+export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Button }) {
   const [files, setFiles] = useState([]);
+  const [isUploaded, setIsUploaded] = useState(false);
 
   const handleDropZoneDrop = useCallback(
     (_dropFiles, acceptedFiles, _rejectedFiles) =>
       setFiles((files) => [...files, ...acceptedFiles]),
     [],
   );
+
+  const handleUpload = () => {
+    // TODO: Implement actual file upload logic here
+    setIsUploaded(true);
+  };
 
   const validImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
 
@@ -41,13 +48,43 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text }) {
     </LegacyStack>
   );
 
+  const draggedImages = isUploaded && (
+    <div style={{ position: 'relative', width: '100%', height: '400px', border: '1px solid #ccc' }}>
+      {files.map((file, index) => (
+        <Draggable key={index} bounds="parent">
+          <div style={{ position: 'absolute', cursor: 'move' }}>
+            <img
+              src={URL.createObjectURL(file)}
+              alt={file.name}
+              style={{ maxWidth: '100px', maxHeight: '100px' }}
+            />
+          </div>
+        </Draggable>
+      ))}
+    </div>
+  );
+
   return (
     <Page>
       <TitleBar title="Image Proof" />
-      <DropZone onDrop={handleDropZoneDrop} variableHeight>
-        {uploadedFiles}
-        {fileUpload}
-      </DropZone>
+      {!isUploaded ? (
+        <>
+          <DropZone onDrop={handleDropZoneDrop} variableHeight>
+            {uploadedFiles}
+            {fileUpload}
+          </DropZone>
+          {files.length > 0 && (
+            <Button onClick={handleUpload} primary>
+              Upload Images
+            </Button>
+          )}
+        </>
+      ) : (
+        <>
+          <Text variant="bodyMd">Images uploaded successfully! Drag them around:</Text>
+          {draggedImages}
+        </>
+      )}
     </Page>
   );
 }
