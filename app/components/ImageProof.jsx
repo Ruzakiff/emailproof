@@ -50,7 +50,7 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
 
   const overlayedImages = isUploaded && (
     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-      <img src="materials/rawred.jpg" alt="Red T-shirt" style={{ width: '100%', pointerEvents: 'none' }} />
+      <img src="materials/rawred_u2netp_alpha.png" alt="Red T-shirt" style={{ width: '100%', pointerEvents: 'none' }} />
       {files.map((file, index) => (
         <Draggable 
           key={index} 
