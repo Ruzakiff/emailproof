@@ -3,24 +3,118 @@ import { TitleBar } from "@shopify/app-bridge-react";
 import { NoteIcon } from '@shopify/polaris-icons';
 import Draggable from 'react-draggable';
 
-export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Button, Select } ) {
-  const [files, setFiles] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
+const baseUrl = 'https://envnamee.eba-xrvtzd7q.us-east-1.elasticbeanstalk.com';
+
+// Custom hook for managing image processing
+function useImageProcessing(apiKey) {
   const [processedImages, setProcessedImages] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+
+  const processImage = useCallback(async (file) => {
+    if (!apiKey) {
+      setError('API key is missing');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      console.log('Uploading image...'); // Debug log
+      const response = await fetch(`${baseUrl}/remove-background`, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': apiKey,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}. ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('Upload response:', data); // Debug log
+      const taskId = data.task_id;
+
+      // Poll for task status
+      let status;
+      do {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between polls
+        console.log('Checking task status...'); // Debug log
+        const statusResponse = await fetch(`${baseUrl}/task-status/${taskId}`, {
+          headers: {
+            'X-API-Key': apiKey,
+          },
+        });
+        if (!statusResponse.ok) {
+          const errorText = await statusResponse.text();
+          throw new Error(`Status check failed: ${statusResponse.status} ${statusResponse.statusText}. ${errorText}`);
+        }
+        const statusData = await statusResponse.json();
+        console.log('Status response:', statusData); // Debug log
+        status = statusData.status;
+      } while (status === 'processing');
+
+      if (status !== 'completed') {
+        throw new Error(`Processing failed: ${status}`);
+      }
+
+      // Get the result
+      console.log('Fetching result...'); // Debug log
+      const resultResponse = await fetch(`${baseUrl}/get-result/${taskId}`, {
+        headers: {
+          'X-API-Key': apiKey,
+        },
+      });
+
+      if (!resultResponse.ok) {
+        const errorText = await resultResponse.text();
+        throw new Error(`Failed to retrieve result: ${resultResponse.status} ${resultResponse.statusText}. ${errorText}`);
+      }
+
+      const blob = await resultResponse.blob();
+      const url = URL.createObjectURL(blob);
+
+      setProcessedImages(prev => [...prev, { id: taskId, url, name: file.name }]);
+    } catch (err) {
+      console.error('Error in processImage:', err); // Debug log
+      setError(err.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [apiKey]);
+
+  return { processedImages, isProcessing, error, processImage };
+}
+
+export function ImageProof(props) {
+  console.log('ImageProof props:', props);
+
+  const { Page, DropZone, LegacyStack, Thumbnail, Text, Button, Select } = props;
+
+  const [files, setFiles] = useState([]);
   const [mediaType, setMediaType] = useState('tshirt');
+  const apiKey = '2ef77a2e55864bb5cdb3f0239731c647fc8d8e36d65c5d88be5f75ebfb5fec5d';
+
+  console.log('API Key:', apiKey); // Log the API key (be careful with this in production)
+
+  const { processedImages, isProcessing, error, processImage } = useImageProcessing(apiKey);
 
   const mediaOptions = [
     {label: 'T-Shirt', value: 'tshirt'},
     {label: 'Mug', value: 'mug'},
     {label: 'Poster', value: 'poster'},
-    // Add more media types as needed
   ];
 
   const backgroundImages = {
     tshirt: 'materials/rawred_u2netp_alpha.png',
     mug: 'materials/redtshirt.jpg',
     poster: '/poster-template.jpg',
-    // Add more background images for each media type
   };
 
   const handleDropZoneDrop = useCallback(
@@ -31,28 +125,12 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
 
   const handleMediaTypeChange = useCallback((value) => setMediaType(value), []);
 
-  const handleUpload = async () => {
-    setIsUploading(true);
-    try {
-      // Simulating API call - replace with actual API call
-      const uploadedImages = await Promise.all(files.map(async (file) => {
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return {
-          id: Math.random().toString(36).substr(2, 9),
-          url: URL.createObjectURL(file),
-          name: file.name
-        };
-      }));
-
-      setProcessedImages(uploadedImages);
-    } catch (error) {
-      console.error('Upload failed:', error);
-      // Handle error (e.g., show error message to user)
-    } finally {
-      setIsUploading(false);
+  const handleUpload = useCallback(async () => {
+    for (const file of files) {
+      await processImage(file);
     }
-  };
+    setFiles([]);
+  }, [files, processImage]);
 
   const validImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
 
@@ -124,6 +202,7 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
         onChange={handleMediaTypeChange}
         value={mediaType}
       />
+      {error && <Text variation="negative">{error}</Text>}
       {processedImages.length === 0 ? (
         <>
           <DropZone onDrop={handleDropZoneDrop} variableHeight>
@@ -131,8 +210,8 @@ export function ImageProof({ Page, DropZone, LegacyStack, Thumbnail, Text, Butto
             {fileUpload}
           </DropZone>
           {files.length > 0 && (
-            <Button onClick={handleUpload} primary loading={isUploading}>
-              {isUploading ? 'Uploading...' : 'Upload Images'}
+            <Button onClick={handleUpload} primary loading={isProcessing}>
+              {isProcessing ? 'Processing...' : 'Process Images'}
             </Button>
           )}
         </>

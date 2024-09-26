@@ -3,7 +3,7 @@
 client_id = "c5dee011283e7e9eef079ed6e015c1f2"
 name = "emailproof"
 handle = "emailproof"
-application_url = "https://share-myrtle-apache-offshore.trycloudflare.com"
+application_url = "https://station-concrete-repeated-billing.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://share-myrtle-apache-offshore.trycloudflare.com/auth/callback",
-  "https://share-myrtle-apache-offshore.trycloudflare.com/auth/shopify/callback",
-  "https://share-myrtle-apache-offshore.trycloudflare.com/api/auth/callback"
+  "https://station-concrete-repeated-billing.trycloudflare.com/auth/callback",
+  "https://station-concrete-repeated-billing.trycloudflare.com/auth/shopify/callback",
+  "https://station-concrete-repeated-billing.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
