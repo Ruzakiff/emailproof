@@ -182,34 +182,59 @@ export function ImageProof(props) {
     </LegacyStack>
   );
 
+  // Define the bounds of the t-shirt area (adjust these values as needed)
+  const tshirtBounds = {
+    left: '20%',
+    top: '25%',
+    width: '60%',
+    height: '50%'
+  };
+
   const overlayedImages = processedImages.length > 0 && (
     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-      <img src={backgroundImages[mediaType]} alt={`${mediaType} template`} style={{ width: '100%', pointerEvents: 'none' }} />
-      {processedImages.map((image) => (
-        <Draggable 
-          key={image.id} 
-          bounds="parent"
-          onStart={(e) => e.stopPropagation()}
-          onDrag={(e) => e.stopPropagation()}
-          onStop={(e) => e.stopPropagation()}
-        >
-          <div 
-            style={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              cursor: 'move',
-              touchAction: 'none'
-            }}
+      <img 
+        src={backgroundImages[mediaType]} 
+        alt={`${mediaType} template`} 
+        style={{ width: '100%', pointerEvents: 'none' }} 
+      />
+      <div style={{
+        position: 'absolute',
+        left: tshirtBounds.left,
+        top: tshirtBounds.top,
+        width: tshirtBounds.width,
+        height: tshirtBounds.height,
+        // Uncomment the next line to visualize the draggable area
+        // border: '2px solid red'
+      }}>
+        {processedImages.map((image) => (
+          <Draggable 
+            key={image.id}
+            bounds="parent"
+            defaultPosition={{x: 0, y: 0}}
+            onStart={(e) => e.stopPropagation()}
+            onDrag={(e) => e.stopPropagation()}
+            onStop={(e) => e.stopPropagation()}
           >
-            <img
-              src={image.url}
-              alt={image.name}
-              style={{ maxWidth: '100px', maxHeight: '100px', pointerEvents: 'none' }}
-            />
-          </div>
-        </Draggable>
-      ))}
+            <div 
+              style={{ 
+                position: 'absolute',
+                cursor: 'move',
+                touchAction: 'none'
+              }}
+            >
+              <img
+                src={image.url}
+                alt={image.name}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100%', 
+                  pointerEvents: 'none'
+                }}
+              />
+            </div>
+          </Draggable>
+        ))}
+      </div>
     </div>
   );
 
