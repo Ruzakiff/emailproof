@@ -182,13 +182,24 @@ export function ImageProof(props) {
     </LegacyStack>
   );
 
-  // Define the bounds of the t-shirt area (adjust these values as needed)
+  const [imageSizes, setImageSizes] = useState({});
+
   const tshirtBounds = {
     left: '20%',
     top: '25%',
     width: '60%',
     height: '50%'
   };
+
+  const handleResize = useCallback((imageId, direction) => {
+    setImageSizes(prev => {
+      const currentSize = prev[imageId] || { scale: 1 };
+      const newScale = direction === 'increase' 
+        ? Math.min(currentSize.scale * 1.1, 2) 
+        : Math.max(currentSize.scale * 0.9, 0.5);
+      return { ...prev, [imageId]: { scale: newScale } };
+    });
+  }, []);
 
   const overlayedImages = processedImages.length > 0 && (
     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
@@ -203,8 +214,6 @@ export function ImageProof(props) {
         top: tshirtBounds.top,
         width: tshirtBounds.width,
         height: tshirtBounds.height,
-        // Uncomment the next line to visualize the draggable area
-        // border: '2px solid red'
       }}>
         {processedImages.map((image) => (
           <Draggable 
@@ -215,22 +224,22 @@ export function ImageProof(props) {
             onDrag={(e) => e.stopPropagation()}
             onStop={(e) => e.stopPropagation()}
           >
-            <div 
-              style={{ 
-                position: 'absolute',
-                cursor: 'move',
-                touchAction: 'none'
-              }}
-            >
+            <div style={{ position: 'absolute', cursor: 'move' }}>
               <img
                 src={image.url}
                 alt={image.name}
                 style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '100%', 
+                  width: '100px',
+                  height: 'auto',
+                  transform: `scale(${imageSizes[image.id]?.scale || 1})`,
+                  transformOrigin: 'top left',
                   pointerEvents: 'none'
                 }}
               />
+              <div>
+                <button onClick={() => handleResize(image.id, 'increase')}>+</button>
+                <button onClick={() => handleResize(image.id, 'decrease')}>-</button>
+              </div>
             </div>
           </Draggable>
         ))}
