@@ -125,6 +125,10 @@ export function ImageProof(props) {
 
   const { processedImages, isProcessing, processImage } = useImageProcessing(apiKey);
 
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const canvasRef = useRef(null);
+  const [capturedImageUrl, setCapturedImageUrl] = useState(null);
+
   const mediaOptions = [
     {label: 'T-Shirt', value: 'tshirt'},
     {label: 'Mug', value: 'mug'},
@@ -136,6 +140,28 @@ export function ImageProof(props) {
     mug: 'materials/redtshirt.jpg',
     poster: '/poster-template.jpg',
   };
+
+  const tshirtBounds = {
+    left: '20%',
+    top: '25%',
+    width: '60%',
+    height: '50%'
+  };
+
+  const loadBackgroundImage = useCallback((mediaType) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        setCanvasSize({ width: img.width, height: img.height });
+        resolve(img);
+      };
+      img.src = backgroundImages[mediaType];
+    });
+  }, [backgroundImages]);
+
+  useEffect(() => {
+    loadBackgroundImage(mediaType);
+  }, [mediaType, loadBackgroundImage]);
 
   const handleDropZoneDrop = useCallback(
     (_dropFiles, acceptedFiles, _rejectedFiles) =>
@@ -184,13 +210,6 @@ export function ImageProof(props) {
 
   const [imageSizes, setImageSizes] = useState({});
   const [imagePositions, setImagePositions] = useState({});
-
-  const tshirtBounds = {
-    left: '20%',
-    top: '25%',
-    width: '60%',
-    height: '50%'
-  };
 
   const handleResize = useCallback((imageId, direction) => {
     setImageSizes(prev => {
@@ -273,66 +292,50 @@ export function ImageProof(props) {
     </div>
   );
 
-  const canvasRef = useRef(null);
-  const [capturedImageUrl, setCapturedImageUrl] = useState(null);
-
-  const captureOverlappedImage = useCallback(() => {
+  const captureOverlappedImage = useCallback(async () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // Set canvas size to match the background image size
-    canvas.width = 500; // Adjust this to match your background image width
-    canvas.height = 500; // Adjust this to match your background image height
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
 
-    // Load and draw the background image
-    const bgImage = new Image();
-    bgImage.onload = () => {
-      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+    const bgImage = await loadBackgroundImage(mediaType);
+    ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
 
-      // Calculate t-shirt area bounds
-      const tshirtArea = {
-        x: canvas.width * 0.2,
-        y: canvas.height * 0.25,
-        width: canvas.width * 0.6,
-        height: canvas.height * 0.5
-      };
-
-      // Draw each processed image
-      const imagesToDraw = processedImages.length;
-      let imagesDrawn = 0;
-
-      processedImages.forEach((image) => {
-        const img = new Image();
-        img.onload = () => {
-          const scale = imageSizes[image.id]?.scale || 1;
-          const position = imagePositions[image.id] || { x: 0, y: 0 };
-
-          // Calculate the scaled dimensions
-          const scaledWidth = 100 * scale; // Assuming initial width is 100px
-          const scaledHeight = (img.height / img.width) * scaledWidth;
-
-          // Calculate position within t-shirt area
-          const x = tshirtArea.x + position.x;
-          const y = tshirtArea.y + position.y;
-
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-          ctx.restore();
-
-          imagesDrawn++;
-
-          // If all images have been drawn, set the captured image URL
-          if (imagesDrawn === imagesToDraw) {
-            const dataUrl = canvas.toDataURL('image/png');
-            setCapturedImageUrl(dataUrl);
-          }
-        };
-        img.src = image.url;
-      });
+    // Calculate t-shirt area bounds
+    const tshirtArea = {
+      x: canvas.width * parseFloat(tshirtBounds.left) / 100,
+      y: canvas.height * parseFloat(tshirtBounds.top) / 100,
+      width: canvas.width * parseFloat(tshirtBounds.width) / 100,
+      height: canvas.height * parseFloat(tshirtBounds.height) / 100
     };
-    bgImage.src = backgroundImages[mediaType];
-  }, [processedImages, imageSizes, imagePositions, mediaType, backgroundImages]);
+
+    processedImages.forEach((image) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = imageSizes[image.id]?.scale || 1;
+        const position = imagePositions[image.id] || { x: 0, y: 0 };
+
+        const scaledWidth = 100 * scale;
+        const scaledHeight = (img.height / img.width) * scaledWidth;
+
+        const x = tshirtArea.x + position.x;
+        const y = tshirtArea.y + position.y;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+        ctx.restore();
+
+        // Set the captured image URL after all images are drawn
+        if (image === processedImages[processedImages.length - 1]) {
+          const dataUrl = canvas.toDataURL('image/png');
+          setCapturedImageUrl(dataUrl);
+        }
+      };
+      img.src = image.url;
+    });
+  }, [canvasSize, mediaType, processedImages, imageSizes, imagePositions, loadBackgroundImage]);
 
   useEffect(() => {
     const checkRootUrl = async () => {
