@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { TitleBar } from "@shopify/app-bridge-react";
 import { NoteIcon } from '@shopify/polaris-icons';
 import Draggable from 'react-draggable';
 
-const baseUrl = 'https://envnamee.eba-xrvtzd7q.us-east-1.elasticbeanstalk.com';
+const baseUrl = 'https://ryanchenyang.com';
 
 // Custom hook for managing image processing
 function useImageProcessing(apiKey) {
@@ -20,10 +20,29 @@ function useImageProcessing(apiKey) {
     setIsProcessing(true);
     setError(null);
     try {
+      // Check root URL first
+      console.log('Checking root URL:', baseUrl); // Debug log
+      const rootResponse = await fetch(baseUrl, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': apiKey,
+        },
+      });
+
+      console.log('Root URL response status:', rootResponse.status); // Debug log
+
+      if (!rootResponse.ok) {
+        throw new Error(`Root URL check failed: ${rootResponse.status} ${rootResponse.statusText}`);
+      }
+
+      const rootData = await rootResponse.json();
+      console.log('Root URL response data:', rootData); // Debug log
+
+      // Proceed with image processing
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('Uploading image...'); // Debug log
+      console.log('Uploading image to:', `${baseUrl}/remove-background`); // Debug log
       const response = await fetch(`${baseUrl}/remove-background`, {
         method: 'POST',
         headers: {
@@ -99,11 +118,12 @@ export function ImageProof(props) {
 
   const [files, setFiles] = useState([]);
   const [mediaType, setMediaType] = useState('tshirt');
+  const [error, setError] = useState(null);
   const apiKey = '2ef77a2e55864bb5cdb3f0239731c647fc8d8e36d65c5d88be5f75ebfb5fec5d';
 
-  console.log('API Key:', apiKey); // Log the API key (be careful with this in production)
+  console.log('API Key:', apiKey);
 
-  const { processedImages, isProcessing, error, processImage } = useImageProcessing(apiKey);
+  const { processedImages, isProcessing, processImage } = useImageProcessing(apiKey);
 
   const mediaOptions = [
     {label: 'T-Shirt', value: 'tshirt'},
@@ -192,6 +212,29 @@ export function ImageProof(props) {
       ))}
     </div>
   );
+
+  useEffect(() => {
+    const checkRootUrl = async () => {
+      try {
+        const response = await fetch(baseUrl, {
+          method: 'GET',
+          headers: {
+            'X-API-Key': apiKey,
+          },
+        });
+        
+        if (response.ok) {
+          setError(null);
+        } else {
+          setError(`Failed to connect to server: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        setError(`Network error: ${error.message}`);
+      }
+    };
+
+    checkRootUrl();
+  }, [apiKey]);
 
   return (
     <Page>
