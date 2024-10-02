@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TitleBar } from "@shopify/app-bridge-react";
 import { NoteIcon } from '@shopify/polaris-icons';
 import Draggable from 'react-draggable';
@@ -183,6 +183,7 @@ export function ImageProof(props) {
   );
 
   const [imageSizes, setImageSizes] = useState({});
+  const [imagePositions, setImagePositions] = useState({});
 
   const tshirtBounds = {
     left: '20%',
@@ -200,6 +201,13 @@ export function ImageProof(props) {
       return { ...prev, [imageId]: { scale: newScale } };
     });
   }, []);
+
+  const handleDragStop = (imageId, e, data) => {
+    setImagePositions(prev => ({
+      ...prev,
+      [imageId]: { x: data.x, y: data.y }
+    }));
+  };
 
   const overlayedImages = processedImages.length > 0 && (
     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
@@ -222,7 +230,7 @@ export function ImageProof(props) {
               defaultPosition={{x: 0, y: 0}}
               onStart={(e) => e.stopPropagation()}
               onDrag={(e) => e.stopPropagation()}
-              onStop={(e) => e.stopPropagation()}
+              onStop={(e, data) => handleDragStop(image.id, e, data)}
             >
               <div style={{ position: 'absolute', cursor: 'move' }}>
                 <img
@@ -264,6 +272,67 @@ export function ImageProof(props) {
       </div>
     </div>
   );
+
+  const canvasRef = useRef(null);
+  const [capturedImageUrl, setCapturedImageUrl] = useState(null);
+
+  const captureOverlappedImage = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size to match the background image size
+    canvas.width = 500; // Adjust this to match your background image width
+    canvas.height = 500; // Adjust this to match your background image height
+
+    // Load and draw the background image
+    const bgImage = new Image();
+    bgImage.onload = () => {
+      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+
+      // Calculate t-shirt area bounds
+      const tshirtArea = {
+        x: canvas.width * 0.2,
+        y: canvas.height * 0.25,
+        width: canvas.width * 0.6,
+        height: canvas.height * 0.5
+      };
+
+      // Draw each processed image
+      const imagesToDraw = processedImages.length;
+      let imagesDrawn = 0;
+
+      processedImages.forEach((image) => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = imageSizes[image.id]?.scale || 1;
+          const position = imagePositions[image.id] || { x: 0, y: 0 };
+
+          // Calculate the scaled dimensions
+          const scaledWidth = 100 * scale; // Assuming initial width is 100px
+          const scaledHeight = (img.height / img.width) * scaledWidth;
+
+          // Calculate position within t-shirt area
+          const x = tshirtArea.x + position.x;
+          const y = tshirtArea.y + position.y;
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+          ctx.restore();
+
+          imagesDrawn++;
+
+          // If all images have been drawn, set the captured image URL
+          if (imagesDrawn === imagesToDraw) {
+            const dataUrl = canvas.toDataURL('image/png');
+            setCapturedImageUrl(dataUrl);
+          }
+        };
+        img.src = image.url;
+      });
+    };
+    bgImage.src = backgroundImages[mediaType];
+  }, [processedImages, imageSizes, imagePositions, mediaType, backgroundImages]);
 
   useEffect(() => {
     const checkRootUrl = async () => {
@@ -315,6 +384,18 @@ export function ImageProof(props) {
           <Text variant="bodyMd">Images processed successfully! Drag them around:</Text>
           {overlayedImages}
         </>
+      )}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <Button onClick={captureOverlappedImage}>Capture Image</Button>
+      {capturedImageUrl && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>Captured Image:</h2>
+          <img 
+            src={capturedImageUrl} 
+            alt="Captured design" 
+            style={{ maxWidth: '100%', border: '1px solid #ccc' }} 
+          />
+        </div>
       )}
     </Page>
   );
