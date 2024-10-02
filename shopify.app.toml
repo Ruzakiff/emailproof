@@ -3,7 +3,7 @@
 client_id = "c5dee011283e7e9eef079ed6e015c1f2"
 name = "emailproof"
 handle = "emailproof"
-application_url = "https://mix-hearts-harvard-industries.trycloudflare.com"
+application_url = "https://respiratory-associate-res-nirvana.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://mix-hearts-harvard-industries.trycloudflare.com/auth/callback",
-  "https://mix-hearts-harvard-industries.trycloudflare.com/auth/shopify/callback",
-  "https://mix-hearts-harvard-industries.trycloudflare.com/api/auth/callback"
+  "https://respiratory-associate-res-nirvana.trycloudflare.com/auth/callback",
+  "https://respiratory-associate-res-nirvana.trycloudflare.com/auth/shopify/callback",
+  "https://respiratory-associate-res-nirvana.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

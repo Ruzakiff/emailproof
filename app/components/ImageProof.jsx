@@ -216,32 +216,50 @@ export function ImageProof(props) {
         height: tshirtBounds.height,
       }}>
         {processedImages.map((image) => (
-          <Draggable 
-            key={image.id}
-            bounds="parent"
-            defaultPosition={{x: 0, y: 0}}
-            onStart={(e) => e.stopPropagation()}
-            onDrag={(e) => e.stopPropagation()}
-            onStop={(e) => e.stopPropagation()}
-          >
-            <div style={{ position: 'absolute', cursor: 'move' }}>
-              <img
-                src={image.url}
-                alt={image.name}
-                style={{ 
-                  width: '100px',
-                  height: 'auto',
-                  transform: `scale(${imageSizes[image.id]?.scale || 1})`,
-                  transformOrigin: 'top left',
-                  pointerEvents: 'none'
-                }}
-              />
-              <div>
-                <button onClick={() => handleResize(image.id, 'increase')}>+</button>
-                <button onClick={() => handleResize(image.id, 'decrease')}>-</button>
+          <React.Fragment key={image.id}>
+            <Draggable 
+              bounds="parent"
+              defaultPosition={{x: 0, y: 0}}
+              onStart={(e) => e.stopPropagation()}
+              onDrag={(e) => e.stopPropagation()}
+              onStop={(e) => e.stopPropagation()}
+            >
+              <div style={{ position: 'absolute', cursor: 'move' }}>
+                <img
+                  src={image.url}
+                  alt={image.name}
+                  style={{ 
+                    width: '100px',
+                    height: 'auto',
+                    transform: `scale(${imageSizes[image.id]?.scale || 1})`,
+                    transformOrigin: 'top left',
+                    pointerEvents: 'none'
+                  }}
+                />
               </div>
+            </Draggable>
+            <div style={{
+              position: 'absolute',
+              left: '10px',
+              bottom: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px'
+            }}>
+              <button 
+                onClick={() => handleResize(image.id, 'increase')}
+                style={buttonStyle}
+              >
+                +
+              </button>
+              <button 
+                onClick={() => handleResize(image.id, 'decrease')}
+                style={buttonStyle}
+              >
+                -
+              </button>
             </div>
-          </Draggable>
+          </React.Fragment>
         ))}
       </div>
     </div>
@@ -301,3 +319,23 @@ export function ImageProof(props) {
     </Page>
   );
 }
+
+const buttonStyle = {
+  width: '30px',
+  height: '30px',
+  borderRadius: '50%',
+  border: 'none',
+  background: 'rgba(0, 0, 0, 0.8)',
+  color: 'white',
+  fontSize: '24px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+  transition: 'background-color 0.2s ease-in-out',
+  '&:hover': {
+    backgroundColor: 'rgba(0, 0, 0, 1)',
+  },
+};
